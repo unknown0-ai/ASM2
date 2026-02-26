@@ -44,7 +44,6 @@ public class ConfirmPaymentServlet extends HttpServlet {
         try (Connection conn = DbConnector.getConnection()) {
             conn.setAutoCommit(false); // Transaction
 
-            // Tính tổng tiền
             double totalAmount = 0;
             for (SanPham sp : cart) {
                 double price = sp.getGiaSP();
@@ -54,7 +53,6 @@ public class ConfirmPaymentServlet extends HttpServlet {
                 totalAmount += price;
             }
 
-            // 1. Lưu Order
             Order order = new Order(customerName, customerEmail, customerPhone, totalAmount, selectedCoupon != null ? selectedCoupon.getCode() : null);
             int orderId = orderDAO.addOrder(order);
 
@@ -62,7 +60,6 @@ public class ConfirmPaymentServlet extends HttpServlet {
                 throw new Exception("Lỗi tạo đơn hàng");
             }
 
-            // 2. Lưu OrderDetail + giảm số lượng tồn kho
             for (SanPham sp : cart) {
                 double price = sp.getGiaSP();
                 double giaDaGiam = price;
@@ -78,11 +75,10 @@ public class ConfirmPaymentServlet extends HttpServlet {
 
             conn.commit();
 
-            // Xóa giỏ và coupon
             session.removeAttribute("cart");
             session.removeAttribute("selectedCoupon");
 
-            // Thành công → về trang danh sách sản phẩm
+            
             resp.sendRedirect(req.getContextPath() + "/Load");
 
         } catch (Exception e) {
